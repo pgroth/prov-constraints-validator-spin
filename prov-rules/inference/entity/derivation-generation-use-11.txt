@@ -1,0 +1,14 @@
+ PREFIX prov: <http://www.w3.org/ns/prov#>
+ PREFIX spin:    <http://spinrdf.org/spin#> 
+ PREFIX rdfs:    <http://www.w3.org/2000/01/rdf-schema#> 
+ 
+ CONSTRUCT {
+ 	?a prov:used ?ed.
+ 	?this prov:wasGeneratedBy ?a. 
+ 	
+ }
+ WHERE {
+ 	?this prov:qualifiedDerivation ?qd.
+ 	?qd prov:entity ?ed.
+ 	?qd prov:hadActivity ?a.
+ }

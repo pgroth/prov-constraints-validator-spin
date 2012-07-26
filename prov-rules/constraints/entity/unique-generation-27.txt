@@ -1,0 +1,18 @@
+ PREFIX prov: <http://www.w3.org/ns/prov#>
+ PREFIX spin:    <http://spinrdf.org/spin#> 
+ PREFIX rdfs:    <http://www.w3.org/2000/01/rdf-schema#> 
+ 
+ CONSTRUCT {
+        _:b0 a spin:ConstraintViolation ;
+             spin:violationRoot ?this ;
+             rdfs:label "Entity was used before it was generated"
+    }
+ 
+  WHERE {
+ 	?this prov:qualifiedGeneration ?b.
+ 	?b prov:atTime ?gentime.
+ 	?this prov:qualifiedUsage ?b2.
+ 	?b2 prov:atTime ?usedtime.
+ 	FILTER(?gentime > ?usedtime)
+ 
+ }
