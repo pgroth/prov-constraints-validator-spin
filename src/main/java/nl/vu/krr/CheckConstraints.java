@@ -60,6 +60,8 @@ public class CheckConstraints {
 		String baseURI = args[0];
 		Model baseModel = ModelFactory.createDefaultModel(ReificationStyle.Minimal);
 		
+		System.out.println("new base model");
+		
 		String fileName = args[1];
 		File file = new File(fileName);
 		InputStream is = new FileInputStream(file);
@@ -69,10 +71,12 @@ public class CheckConstraints {
 		baseModel  = CheckConstraints.addConstraints(baseModel);
 		baseModel = CheckConstraints.addInferences(baseModel);
 		
+		System.out.println("Loaded all constraints and inferences");
 		
 		// Create OntModel with imports
 		OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, baseModel);
 
+		System.out.println("Created the ontology model");
 		
 		//System.out.println(q.toString());
 		SPINModuleRegistry.get().init();
@@ -83,7 +87,7 @@ public class CheckConstraints {
 		ontModel.addSubModel(newTriples);
 		
 	
-		SPINInferences.run(ontModel, newTriples, null, null, false, null);
+		SPINInferences.run(ontModel, newTriples, null, null, true, null);
 		System.out.println("Inferred triples: " + newTriples.size());
 		
 		newTriples.write(System.out, FileUtils.langTurtle);
