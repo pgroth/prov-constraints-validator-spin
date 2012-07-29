@@ -1,0 +1,11 @@
+ PREFIX prov: <http://www.w3.org/ns/prov#>
+ PREFIX spin:    <http://spinrdf.org/spin#> 
+ PREFIX rdfs:    <http://www.w3.org/2000/01/rdf-schema#> 
+ 
+ CONSTRUCT {
+ 	?a prov:precedes ?this.
+ }
+ WHERE {
+ 	?this prov:wasGeneratedBy ?a.
+ 	
+ }
