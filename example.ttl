@@ -20,24 +20,18 @@
 :blogPost prov:wasGeneratedBy :writing.
 :writing prov:used :blogPost.
 
-##Double starting
-:writing prov:wasStartedBy _:b1 .
-:writing prov:wasStartedBy _:b2 .
-
 ##Start comes after end
-:writing prov:startedAtTime "2012-04-25T01:30:00Z"^^xsd:dateTime.
-:writing prov:endedAtTime "2012-04-25T01:00:00Z"^^xsd:dateTime.
+#:writing prov:startedAtTime "2012-04-25T01:30:00Z"^^xsd:dateTime.
+#:writing prov:endedAtTime "2012-04-25T01:00:00Z"^^xsd:dateTime.
 
-##usage before generation
-:blogPost prov:qualifiedGeneration [ prov:atTime "2012-04-03T13:35:23Z"^^xsd:dateTime ].
-:blogPost prov:qualifiedUsage [ prov:atTime "2012-04-03T13:00:00Z"^^xsd:dateTime ].
+:writing prov:wasStartedBy :blogPost.
 
-##inference of a generation that then causes a constraint violation of double gneration
+##inference of a generation that then causes a constraint violation of double generation
 
-:blogPost prov:qualifiedDerivation [
- 	prov:entity :image;
- 	prov:hadActivity :writing2;
- ].
+#:blogPost prov:qualifiedDerivation [
+# 	prov:entity :image;
+# 	prov:hadActivity :writing;
+# ].
       
       
       
