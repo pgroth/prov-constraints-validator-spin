@@ -27,7 +27,11 @@ select ?x where { ?x (c:precedes+|c:strictlyPrecedes+)/c:strictlyPrecedes ?x .}
 
 '''
 
-#Expansion sparql based on event ordering constraints 
+
+
+###############################################
+# SPARQL Query for Constraints
+##############################################
 
 ## Activity Ordering Constraint Insert
 
@@ -224,7 +228,6 @@ invalidation_invalidation_ordering = '''
         ?e a prov:Entity .
         ?e prov:qualifiedInvalidation ?inv1 .
         ?e prov:qualifiedInvalidation ?inv2 .
-        
     } 
 '''
 
@@ -345,6 +348,8 @@ specialization_generation_ordering = '''
         
     } 
 '''
+
+
 
 specialization_invalidation_ordering = '''
     #e1 prov:specializationOf e2
@@ -531,9 +536,9 @@ unique_invalidation = '''
     
     select ?e where {
         ?e prov:qualifiedInvalidation ?inv1 .
-        ?gen1 prov:activity ?act .
+        ?inv1 prov:activity ?act .
         ?e prov:qualifiedInvalidation ?inv2 .
-        ?gen2 prov:activity ?act .    
+        ?inv2 prov:activity ?act .   
         FILTER (?inv1 != ?inv2)
     }
 '''
@@ -545,7 +550,8 @@ unique_wasStartedBy = '''
     select ?a where {
         ?a prov:qualifiedStart ?start1 .
         ?a prov:qualifiedStart ?start2 .
-        ?a prov:wasStartedBy ?a2.
+        ?start1 prov:hadActivity ?starter .
+        ?start2 prov:hadActivity ?starter .
         FILTER (?start1 != ?start2)
     }
 '''
@@ -557,7 +563,8 @@ unique_wasEndedBy = '''
     select ?a where {
         ?a prov:qualifiedEnd ?end1 .
         ?a prov:qualifiedEnd ?end2 .
-        ?a prov:wasEndedBy ?a2 .
+        ?end1 prov:hadActivity ?ender .
+        ?end2 prov:hadActivity ?ender .
         FILTER (?end1 != ?end2)
     }
 '''
@@ -616,8 +623,8 @@ impossible_specializaton_reflexive = '''
     PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
     
     select ?e where {
-        ?e prov:specializationOf ?e .
-    }
+        ?e prov:specializationOf+ ?e .
+    }  
 '''
 
 impossible_property_overlap = '''
@@ -694,6 +701,471 @@ membership_empty_collection = '''
     }
 '''
 
+##Key Constraints
+key_generation = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?g where {
+            {
+            ?g a prov:Generation .
+            ?e1 prov:qualifiedGeneration ?g .
+            ?e2 prov:qualifiedGeneration ?g .
+            FILTER ( ?e1 != ?e2 )
+            } 
+            UNION
+            {
+            ?g a prov:Generation .
+            ?g prov:activity ?a1 .
+            ?g prov:activity ?a2 .
+            FILTER ( ?a1 != ?a2) 
+            } 
+            UNION
+            {
+            ?g a prov:Generation .
+            ?g prov:atTime ?t1 .
+            ?g prov:atTime ?t2 .
+            FILTER ( ?t1 != ?t2) 
+            }            
+    }
+'''
+
+key_used = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?u where {
+            {
+            ?u a prov:Usage .
+            ?a1 prov:qualifiedUsage ?u .
+            ?a2 prov:qualifiedUsage ?u .
+            FILTER ( ?a1 != ?a2 )
+            } 
+            UNION
+            {
+            ?u a prov:Usage .
+            ?u prov:entity ?e1 .
+            ?u prov:entity ?e2 .
+            FILTER ( ?e1 != ?e2) 
+            } 
+            UNION
+            {
+            ?u a prov:Usage .
+            ?u prov:atTime ?t1 .
+            ?u prov:atTime ?t2 .
+            FILTER ( ?t1 != ?t2) 
+            }            
+    }
+'''
+
+key_communication = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?c where {
+            {
+            ?c a prov:Communication .
+            ?a1 prov:qualifiedCommunication ?c .
+            ?a2 prov:qualifiedCommunication ?c .
+            FILTER ( ?a1 != ?a2 )
+            } 
+            UNION
+            {
+            ?c a prov:Communication  .
+            ?c prov:activity ?a1 .
+            ?c prov:activity ?a2 .
+            FILTER ( ?a1 != ?a2) 
+            } 
+                   
+    }
+'''
+
+key_start = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?s where {
+            {
+            ?s a prov:Start .
+            ?a1 prov:qualifiedStart ?s .
+            ?a2 prov:qualifiedStart ?s .
+            FILTER ( ?a1 != ?a2 )
+            } 
+            UNION
+            {
+            ?s a prov:Start  .
+            ?s prov:entity ?e1 .
+            ?s prov:entity ?e2 .
+            FILTER ( ?e1 != ?e2)
+            } 
+            UNION
+            {
+            ?s a prov:Start  .
+            ?s prov:hadActivity ?a1 .
+            ?s prov:hadActivity ?a2 .
+            FILTER ( ?a1 != ?a2)
+            } 
+            UNION
+            {
+            ?s a prov:Start  .
+            ?s prov:atTime ?t1 .
+            ?s prov:atTime ?t2 .
+            FILTER ( ?t1 != ?t2)
+            } 
+                   
+    }
+'''
+
+key_end = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?e where {
+            {
+            ?e a prov:End .
+            ?a1 prov:qualifiedEnd ?e .
+            ?a2 prov:qualifiedEnd ?e .
+            FILTER ( ?a1 != ?a2 )
+            } 
+            UNION
+            {
+            ?e a prov:End .
+            ?e prov:entity ?e1 .
+            ?e prov:entity ?e2 .
+            FILTER ( ?e1 != ?e2)
+            } 
+            UNION
+            {
+            ?e a prov:End .
+            ?e prov:hadActivity ?a1 .
+            ?e prov:hadActivity ?a2 .
+            FILTER ( ?a1 != ?a2)
+            } 
+            UNION
+            {
+            ?e a prov:End .
+            ?e prov:atTime ?t1 .
+            ?e prov:atTime ?t2 .
+            FILTER ( ?t1 != ?t2)
+            } 
+                   
+    }
+'''
+
+key_invalidation = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?inv where {
+            {
+            ?inv a prov:Invalidation .
+            ?e1 prov:qualifiedInvalidation ?inv .
+            ?e2 prov:qualifiedInvalidation ?inv .
+            FILTER ( ?e1 != ?e2 )
+            } 
+            UNION
+            {
+            ?inv a prov:Invalidation .
+            ?inv prov:activity ?a1 .
+            ?inv prov:activity ?a2 .
+            FILTER ( ?a1 != ?a2)
+            } 
+            UNION
+            {
+            ?inv a prov:Invalidation .
+            ?inv prov:atTime ?t1 .
+            ?inv prov:atTime ?t2 .
+            FILTER ( ?t1 != ?t2)
+            } 
+                   
+    }
+'''
+
+key_derivation = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?d where {
+            {
+            ?d a prov:Derivation .
+            ?e1 prov:qualifiedDerivation ?d .
+            ?e2 prov:qualifiedDerivation ?d .
+            FILTER ( ?e1 != ?e2 )
+            } 
+            UNION
+            {
+            ?d a prov:Derivation .
+            ?d prov:entity ?e1 .
+            ?d prov:entity ?e2 .
+            FILTER ( ?e1 != ?e2 )
+            }
+            UNION
+            {
+            ?d a prov:Derivation .
+            ?d prov:hadActivity ?a1 .
+            ?d prov:hadActivity ?a2 .
+            FILTER ( ?a1 != ?a2 )
+            }
+            UNION
+            {
+            ?d a prov:Derivation .
+            ?d prov:hadUsage ?u1 .
+            ?d prov:hadUsage ?u2 .
+            FILTER ( ?u1 != ?u2 )
+            }
+            UNION
+            {
+            ?d a prov:Derivation .
+            ?d prov:hadGeneration ?g1 .
+            ?d prov:hadGeneration ?g2 .
+            FILTER ( ?g1 != ?g2 )
+            }            
+    }
+'''
+
+key_attribution = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?a where {
+            {
+            ?a a prov:Attribution .
+            ?e1 prov:qualifiedAttribution ?a .
+            ?e2 prov:qualifiedAttribution ?a .
+            FILTER ( ?e1 != ?e2 )
+            } 
+            UNION
+            {
+            ?a a prov:Attribution .
+            ?a prov:agent ?ag1 .
+            ?a prov:agent ?ag2 .
+            FILTER ( ?ag1 != ?ag2 )
+            }
+    }
+'''
+
+key_association = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?asc where {
+            {
+            ?asc a prov:Association .
+            ?a1 prov:qualifiedAssociation ?asc .
+            ?a2 prov:qualifiedAssociation ?asc .
+            FILTER ( ?a1 != ?a2 )
+            } 
+            UNION
+            {
+            ?asc a prov:Association .
+            ?asc prov:agent ?ag1 .
+            ?asc prov:agent ?ag2 .
+            FILTER ( ?ag1 != ?ag2 )
+            }
+            UNION
+            {
+            ?asc a prov:Association .
+            ?asc prov:hadPlan ?p1 .
+            ?asc prov:hadPlan ?p2 .
+            FILTER ( ?p1 != ?p2 )
+            }
+    }
+'''
+
+key_delegation = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?dg where {
+            {
+            ?dg a prov:Delegation .
+            ?a1 prov:qualifiedDelegation ?dg .
+            ?a2 prov:qualifiedDelegation ?dg .
+            FILTER ( ?a1 != ?a2 )
+            } 
+            UNION
+            {
+            ?dg a prov:Delegation .
+            ?dg prov:agent ?ag1 .
+            ?dg prov:agent ?ag2 .
+            FILTER ( ?ag1 != ?ag2 )
+            }
+            UNION
+            {
+            ?dg a prov:Delegation .
+            ?dg prov:hadActivity ?a1 .
+            ?dg prov:hadActivity ?a2 .
+            FILTER ( ?a1 != ?a2 )
+            }
+    }
+'''
+
+key_influence = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?inf where {
+            {
+            ?inf a prov:Influence .
+            ?t1 prov:qualifiedInfluence ?inf .
+            ?t2 prov:qualifiedInfluence ?inf .
+            FILTER ( ?t1 != ?t2 )
+            } 
+            UNION
+            {
+            ?inf a prov:Influence .
+            ?inf ?rel ?t1 .
+            ?inf ?rel ?t2 .
+            FILTER ( ?rel IN (prov:agent, 
+                              prov:entity, 
+                              prov:activity)
+                     && ?t1 != ?t2  )
+            }          
+    }
+'''
+
+##type constraints for relations
+
+type_used = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?u where {
+        ?u a prov:Usage .
+        FILTER NOT EXISTS { ?u prov:entity ?e . ?a prov:qualifiedUsage ?u . }
+    }
+'''
+
+type_association = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?asc where {
+        ?asc a prov:Association .
+        FILTER NOT EXISTS { ?a prov:qualifiedAssociation ?asc . }
+    }
+'''
+
+type_attribution = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?att where {
+        ?att a prov:Attribution .
+        FILTER NOT EXISTS { ?att prov:agent ?ag . ?e prov:qualifiedAttribution ?att . }
+    }
+'''
+
+type_generation = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?gen where {
+        ?gen a prov:Generation .
+        FILTER NOT EXISTS { ?gen prov:activity ?a . ?e prov:qualifiedGeneration ?gen . }
+    }
+'''
+
+type_communication = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?c where {
+        ?c a prov:Communication .
+        FILTER NOT EXISTS { ?c prov:activity ?a2 . ?a1 prov:qualifiedCommunication ?c . }
+    }
+'''
+
+type_delegation = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?d where {
+        ?d a prov:Delegation .
+        FILTER NOT EXISTS { ?d prov:agent ?ag2 . ?ag1 prov:qualifiedDelegation ?d . }
+    }
+'''
+
+type_influence = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?i where {
+        ?i a prov:Influence .
+        FILTER NOT EXISTS { ?i prov:influencer|prov:agent ?w2 . ?w prov:qualifiedInfluence|prov:qualifiedAssociation ?i . }
+    }
+'''
+
+type_invalidation = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?i where {
+        ?i a prov:Invalidation .
+        FILTER NOT EXISTS { ?i prov:activity ?a . ?w prov:qualifiedInvalidation ?i . }
+    }
+'''
+
+##--> need to do this check better
+type_start = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?i where {
+        ?s a prov:Start .
+        FILTER NOT EXISTS {?a prov:qualifiedInvalidation ?s . ?s prov:entity|prov:hadActivity ?b }
+   
+    }
+'''
+
+# --> don't know if we are required to have atTime on all events
+# --> if so this check belongs in the ordering constraints
+merge_invalidation = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?i ?i2 where {
+        ?e a prov:Entity .
+        ?e prov:qualifiedInvalidation ?i .
+        ?e prov:qualifiedInvalidation ?i2 .
+        ?i prov:atTime ?t .
+        ?i2 prov:atTime ?t2 .
+        FILTER ( !sameTerm(?i, ?i2) && ?t != ?t2 )
+    }
+'''
+
+merge_generation = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?g ?g2 where {
+        ?e a prov:Entity .
+        ?e prov:qualifiedGeneration ?g .
+        ?e prov:qualifiedGeneration ?g2 .
+        ?g prov:atTime ?t .
+        ?g2 prov:atTime ?t2 .
+        FILTER ( !sameTerm(?g, ?g2) && ?t != ?t2 )
+    }
+'''
+
+merge_start = '''
+    PREFIX prov: <http://www.w3.org/ns/prov#> 
+    PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
+    
+    select ?g ?g2 where {
+        ?a a prov:Activity .
+        ?a prov:qualifiedStart ?s .
+        ?a prov:qualifiedStart ?s2 .
+        ?s prov:atTime ?t .
+        ?s2 prov:atTime ?t2 .
+        FILTER ( !sameTerm(?s, ?s2) && ?t != ?t2 )
+    }
+'''
+
+
+
+###########################
+
 def orderingConstraints(g):
     processUpdate(g, start_precedes_end)
     processUpdate(g, start_start_ordering)
@@ -727,16 +1199,14 @@ def orderingConstraints(g):
     return g
 
 def checkUniqueness (g):
-    queries = [unique_generation, 
-               unique_invalidation, 
+    queries = [unique_generation, unique_invalidation, 
                unique_wasStartedBy,
                unique_wasEndedBy,
                unique_startTime,
                unique_endTime]
     for q in queries:
         if not check(g,q) : 
-            #print q
-            print 'uniqueness'
+            print 'uniqueness' 
             return False
         
     return True
@@ -751,6 +1221,42 @@ def checkImpossibility (g):
     for q in queries:
         if not check(g,q) : 
             print 'impossibility'
+            return False
+        
+    return True
+    
+def checkKeyConstraints (g):
+    queries = [key_generation, 
+               key_used,
+               key_communication,
+               key_start,
+               key_end,
+               key_invalidation,
+               key_derivation,
+               key_attribution,
+               key_association,
+               key_delegation,
+               key_influence  ]
+    for q in queries:
+        if not check(g,q) : 
+            print 'keyconstraints'
+            return False
+        
+    return True
+    
+def checkTypeConstraints (g):
+    queries = [type_used, 
+               type_attribution,
+               type_communication,
+               type_delegation,
+               type_influence,
+               type_association,
+               merge_invalidation,
+               merge_generation, 
+               merge_start ]
+    for q in queries:
+        if not check(g,q) : 
+            print 'typeconstraints'
             return False
         
     return True
@@ -776,7 +1282,7 @@ def validate(filename):
     g.parse(filename, format='turtle')
     #print g.serialize(format='turtle')
 
-    result = checkCycle(g) and checkUniqueness(g) and checkImpossibility(g)
+    result = checkTypeConstraints(g) and checkKeyConstraints(g) and checkCycle(g) and checkUniqueness(g) and checkImpossibility(g)
     print filename + ' ' + str(result)
     if result == True :
         return 'PASS'
@@ -792,82 +1298,27 @@ def testCycleDetection():
     print g.serialize(format='turtle')
     print checkCycle(g)
 
-def testAllConstraints():
-    dir = os.listdir('./constraints/')
+def testAllConstraints(dirs):
+    dir = os.listdir(dirs)
     notcorrect = 0
+    numberoftestcases = 0
     for f in dir:
         if f.endswith('.ttl'):
-            res = validate('./constraints/' + f)
+            numberoftestcases = numberoftestcases + 1
+            res = validate(dirs + f)
             if not (res in f):
                 print "Not correct"
                 notcorrect = notcorrect + 1
-    print notcorrect
+    print '(' + str(numberoftestcases - notcorrect) + '/' + str(numberoftestcases) + ')'
                 
                 
     
 
 testCycleDetection()
-testAllConstraints()
-#validate('./constraints/ordering-entity4-PASS-c40.ttl')
+testAllConstraints('./constraints/')
+testAllConstraints('./provo-constraints/')
+testAllConstraints('./provdm-constraints/')
 
 
-
-
-# validate('./constraints/ordering-activity1-PASS-c30.ttl')
-# validate('./constraints/ordering-activity2-PASS-c33.ttl')
-# validate('./constraints/ordering-activity3-PASS-c34.ttl')
-#validate('./constraints/ordering-activity4-PASS-c31.ttl')
-# validate('./constraints/ordering-activity5-PASS-c32.ttl')
-# validate('./constraints/ordering-communication-PASS-c35.ttl')
-# validate('./constraints/ordering-entity1-PASS-c36-c37-c38.ttl')
-# validate('./constraints/ordering-entity2-PASS-c36.ttl')
-# validate('./constraints/ordering-entity3-PASS-c39.ttl')
-# validate('./constraints/ordering-entity4-PASS-c40.ttl')
-# validate('./constraints/ordering-derivation1-PASS-c42.ttl')
-# validate('./constraints/ordering-derivation2-FAIL-c42.ttl')
-# validate('./constraints/ordering-derivation3-PASS-c41-c42.ttl')
-# validate('./constraints/ordering-starts1-PASS-c43.ttl')
-# validate('./constraints/ordering-ends1-PASS-c44.ttl')
-# validate('./constraints/ordering-specialization1-PASS-c45.ttl')
-# validate('./constraints/ordering-specialization2-PASS-c46.ttl')
-# validate('./constraints/ordering-specialization3-PASS-c42-c45.ttl')
-# validate('./constraints/ordering-specialization4-FAIL-c42-c45.ttl')
-# validate('./constraints/ordering-association1-PASS-c47.ttl')
-# validate('./constraints/ordering-association2-PASS-c47.ttl')
-# validate('./constraints/ordering-attribution1-PASS-c48.ttl')
-# validate('./constraints/ordering-attribution2-PASS-c48.ttl')
-# validate('./constraints/ordering-delegation1-PASS-c49.ttl')
-# validate('./constraints/ordering-delegation2-PASS-c49.ttl')
-# validate('./constraints/unification-generation-f1-FAIL-c24.ttl')
-# validate('./constraints/unification-generation-s3-PASS-c24.ttl')
-# validate('./constraints/unification-invalidation-f1-FAIL-c25.ttl')
-# validate('./constraints/unification-invalidation-s3-PASS-c25.ttl')
-# validate('./constraints/unification-start-f4-FAIL-c26.ttl')
-# validate('./constraints/unification-start-s1-PASS-c26.ttl')
-# validate('./constraints/unification-start-s2-PASS-c26.ttl')
-# validate('./constraints/unification-start-s3-PASS-c26.ttl')
-# validate('./constraints/unification-start-s4-PASS-c26.ttl')
-# validate('./constraints/unification-end-f4-FAIL-c27.ttl')
-# validate('./constraints/unification-end-s1-PASS-c27.ttl')
-# validate('./constraints/unification-end-s2-PASS-c27.ttl')
-# validate('./constraints/unification-end-s3-PASS-c27.ttl')
-# validate('./constraints/unification-end-s4-PASS-c27.ttl')
-# validate('./constraints/unification-activity-end-f1-FAIL-c29.ttl')
-# validate('./constraints/unification-activity-end-s1-PASS-c29.ttl')
-# validate('./constraints/unification-activity-start-f1-FAIL-c28.ttl')
-# validate('./constraints/unification-activity-start-s1-PASS-c28.ttl')
-# validate('./constraints/prov-o-property-hadGeneration-FAIL-c51-DM.ttl')
-# validate('./constraints/prov-o-property-hadUsage-FAIL-c51-DM.ttl')
-# validate('./constraints/unification-specialization-f3-FAIL-c52.ttl')
-# validate('./constraints/unification-specialization-f4-FAIL-c52.ttl')
-# validate('./constraints/type-f4-FAIL-c53.ttl')
-# validate('./constraints/type-f3-FAIL-c54.ttl')
-# validate('./constraints/type-s1-PASS-c50-c55.ttl')
-# validate('./constraints/type-s2-PASS-c50-c55.ttl')
-# validate('./constraints/type-f1-FAIL-c50-c55.ttl')
-# validate('./constraints/type-f2-FAIL-c50-c55.ttl')
-# validate('./constraints/type-collection-FAIL-c56.ttl')
-
-    
-    
-
+#should be false
+#validate('./provdm-constraints/prov-dm-ex29_invalidation-PASS.ttl')
