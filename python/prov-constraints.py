@@ -535,11 +535,16 @@ unique_invalidation = '''
     PREFIX c: <http://www.few.vu.nl/pgroth/provconstraints#>
     
     select ?e where {
-        ?e prov:qualifiedInvalidation ?inv1 .
-        ?inv1 prov:activity ?act .
-        ?e prov:qualifiedInvalidation ?inv2 .
-        ?inv2 prov:activity ?act .   
-        FILTER (?inv1 != ?inv2)
+        {
+            ?e prov:qualifiedInvalidation ?inv1 .
+            ?inv1 prov:activity ?act .
+            ?e prov:qualifiedInvalidation ?inv2 .
+            ?inv2 prov:activity ?act .
+            OPTIONAL {?inv1 prov:atTime ?t1 .
+            ?inv2 prov:atTime ?t2 .}   
+            FILTER (?inv1 != ?inv2 || ?t1 != ?t2)
+        }
+       
     }
 '''
 
@@ -552,7 +557,7 @@ unique_wasStartedBy = '''
         ?a prov:qualifiedStart ?start2 .
         ?start1 prov:hadActivity ?starter .
         ?start2 prov:hadActivity ?starter .
-        FILTER (?start1 != ?start2)
+        FILTER ( ?start1 != ?start2)
     }
 '''
 
@@ -1062,7 +1067,7 @@ type_generation = '''
     
     select ?gen where {
         ?gen a prov:Generation .
-        FILTER NOT EXISTS { ?gen prov:activity ?a . ?e prov:qualifiedGeneration ?gen . }
+        FILTER NOT EXISTS { ?e prov:qualifiedGeneration ?gen . }
     }
 '''
 
@@ -1249,9 +1254,9 @@ def checkTypeConstraints (g):
                type_attribution,
                type_communication,
                type_delegation,
+               type_generation,
                type_influence,
                type_association,
-               merge_invalidation,
                merge_generation, 
                merge_start ]
     for q in queries:
@@ -1265,6 +1270,9 @@ def checkTypeConstraints (g):
 def check(g, q):
     bindings = g.query(q)
     if len(bindings) > 0:
+        #for b in bindings:
+        #    print b
+        #print q
         return False
     else:
         return True
@@ -1309,16 +1317,23 @@ def testAllConstraints(dirs):
             if not (res in f):
                 print "Not correct"
                 notcorrect = notcorrect + 1
+                
     print '(' + str(numberoftestcases - notcorrect) + '/' + str(numberoftestcases) + ')'
                 
                 
     
 
 testCycleDetection()
-testAllConstraints('./constraints/')
-testAllConstraints('./provo-constraints/')
+#testAllConstraints('./constraints/')
+#testAllConstraints('./provo-constraints/')
 testAllConstraints('./provdm-constraints/')
 
+#validate('./constraints/unification-invalidation-s7-PASS-c23-c25.ttl')
+#validate('./constraints/unification-invalidation-f5-FAIL-c23-c25.ttl') 
+#validate('./constraints/unification-invalidation-f1-FAIL-c25.ttl')
 
 #should be false
 #validate('./provdm-constraints/prov-dm-ex29_invalidation-PASS.ttl')
+#validate('./provdm-constraints/prov-dm-ex23_start-PASS.ttl')
+#validate('./constraints/ordering-attribution2-PASS-c48.ttl')
+#validate('./provo-constraints/prov-o-property-qualifiedDerivation-FAIL.ttl')
