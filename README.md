@@ -1,3 +1,6 @@
+__Note Have a look at https://github.com/pgroth/prov-check__ I switched implementations to just use SPARQL with a small driver program.
+
+
 prov-constraints-validator-spin
 ===============================
 
